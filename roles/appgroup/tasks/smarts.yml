@@ -1,0 +1,100 @@
+# Extra Packages for Enterprise Linux (EPEL) required for some of the packages installed below
+- name: Install the epel-release repo if SMARTS 
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+
+- name: Update ca-certificates
+  yum:
+    name:
+      - ca-certificates
+    state: latest # noqa 403
+  when: (ansible_facts['os_family'] == 'RedHat')
+
+- name: Install SMARTS Software Package Prerequisites
+  yum:
+    name:
+      - bind-utils
+      - dos2unix
+      - krb5-devel
+      - libselinux-python
+      - libstdc++
+      - libstdc++.i686
+      - libXext
+      - libXext.i686
+      - libXi
+      - libXi.i686
+      - libXtst
+      - libXtst.i686
+      - libXrender
+      - libXrender.i686
+      - nfs-utils
+      - redhat-lsb
+      - rsync
+      - tcpdump
+      - traceroute
+      - vim-enhanced
+    state: present
+
+- name: Install the latest version of compat-libstdc++-33 from the rhel-7-server-rhui-optional-rpms repo
+  yum:
+    name:
+      - compat-libstdc++-33
+      - compat-libstdc++-33.i686
+    enablerepo: rhel-7-server-rhui-optional-rpms
+    state: present
+
+# https://www.xmodulo.com/how-to-install-tcpping-on-linux.html
+- name: Download and install tcpping
+  get_url:
+    url: http://www.vdberg.org/~richard/tcpping
+    dest: /usr/bin/tcpping
+    mode: '0755'
+
+- name: Disable SELinux
+  selinux:
+    state: disabled
+
+- name: Start and enable nfs
+  service:
+    name: nfs
+    state: started
+    enabled: yes
+
+# Requires NFS Port (TCP Port 2049) open between servers
+- name: Mount Installation Media
+  mount:
+    path: /mnt
+    src: 161.108.208.155:/smartsxfr 
+    fstype: nfs
+    state: mounted
+
+- name: Extract smarts_users.tar
+  unarchive:
+    src: /mnt/SMARTS10/Linux/smarts_users.tar
+    dest: /
+    remote_src: yes
+
+- name: SAM SUITE Install
+  command: /mnt/SMARTS10/Linux/setup-SAM-10_1_7_0-linux64.bin -i silent -f /mnt/SMARTS10/Linux/SAM_SUITE-response.txt
+  changed_when: False
+
+- name: SAM CONSOLE SUITE Install
+  command: /mnt/SMARTS10/Linux/setup-CONSOLE-10_1_7_0-linux.bin -i silent -f /mnt/SMARTS10/Linux/SAM_CONSOLE_SUITE-response.txt
+  changed_when: False
+
+- name: IP NETWORK SUITE Install
+  command: /mnt/SMARTS10/Linux/setup-IP-10_1_7_0-linux64.bin -i silent -f /mnt/SMARTS10/Linux/IP_NETWORK_SUITE-response.txt
+  changed_when: False
+
+- name: NPM SUITE Install
+  command: /mnt/SMARTS10/Linux/setup-NPM-10_1_7_0-linux64.bin -i silent -f /mnt/SMARTS10/Linux/NPM_SUITE-response.txt
+  changed_when: False
+
+- name: ESM Install
+  command: /mnt/SMARTS10/Linux/setup-ESM-10_1_7_0-linux64.bin -i silent -f /mnt/SMARTS10/Linux/ESM_SUITE-response.txt
+  changed_when: False
+
+- name: ACM Install
+  command: /mnt/SMARTS10/Linux/setup-ACM-10_1_7_0-linux64.bin -i silent -f /mnt/SMARTS10/Linux/ACM_SUITE-response.txt
+  changed_when: False

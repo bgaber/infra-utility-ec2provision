@@ -1,0 +1,39 @@
+- name: Add ansible-tower repository
+  yum_repository:
+    description: Ansible Tower Repository - $releasever $basearch
+    name: ansible-tower
+    baseurl: http://releases.ansible.com/ansible-tower/rpm/epel-8-$basearch
+    file: ansible-tower
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+- name: Add ansible-tower-dependencies repository
+  yum_repository:
+    description: Ansible Tower Dependencies Repository - $releasever $basearch
+    name: ansible-tower-dependencies
+    baseurl: http://releases.ansible.com/ansible-tower/rpm/dependencies/3.8/epel-8-$basearch
+    file: ansible-tower
+    enabled: yes
+    gpgcheck: yes
+    gpgkey: file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+
+- name: Install the Ansible Tower package
+  yum:
+    name: "ansible-tower-isolated-{{ ansible_tower_version }}"
+    state: present
+
+- name: Create /var/lib/awx/.ssh directory if it does not exist
+  file:
+    path: /var/lib/awx/.ssh
+    state: directory
+    owner: awx
+    mode: '0700'
+    recurse: yes
+
+- name: Touch /var/lib/awx/.ssh/authorized_keys file
+  file:
+    path: /var/lib/awx/.ssh/authorized_keys
+    state: touch
+    owner: awx
+    mode: '0600'

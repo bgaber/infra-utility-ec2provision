@@ -1,0 +1,23 @@
+---
+
+- name: Setup Variables for US Test
+  set_fact:
+    awsarnrole: "arn:aws:iam::678901234567:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, Cisco AnyConnect, Qualys and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-f9b4228c", "sg-0e04f06355f071dee", "sg-009b2f6c5fbf75f9d", "sg-0f65827c6049644e5"]
+    # Windows list of Standard, Cisco AnyConnect Security Groups and Qualys
+    windows_sec_gps: ["sg-f9b4228c", "sg-0e04f06355f071dee", "sg-009b2f6c5fbf75f9d"]
+    # Key pair to use on the instance.
+    target_key: "testprovisioning"
+
+- name: Setup Subnetting Variables US Test A
+  set_fact:
+    target_subnet_id: "subnet-16d58e4e"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables US Test B
+  set_fact:
+    target_subnet_id: "subnet-bc5d0496"
+  when: (netside == "B")
+  

@@ -1,0 +1,18 @@
+- name: Install .Net 3.5
+  ansible.windows.win_optional_feature:
+    name: NetFx3
+    state: present
+
+- name: Install Windows Telnet client
+  ansible.windows.win_feature:
+    name: Telnet
+    state: present
+
+# Install SQL Native Client
+#   Run sqlncli.msi and choose default on every selection
+- name: Install SQL Native Client
+  win_package:
+    path: files/sqlncli.msi
+    state: present
+
+# Code for silent install of NetIQ Management Server

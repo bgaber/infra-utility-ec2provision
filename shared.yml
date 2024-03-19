@@ -1,0 +1,22 @@
+---
+
+- name: Setup Variables for US Shared Services
+  set_fact:
+    awsarnrole: "arn:aws:iam::567890123456:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, SMARTS, Cisco AnyConnect, Qualys and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-02974f913553467e6", "sg-f1d1288b", "sg-0009c04d83aa54205", "sg-03020fa65e7b22b40", "sg-0c0f71f493bb723d7"]
+    # Windows list of Standard, SMARTS, Cisco AnyConnect Security Groups and Qualys
+    windows_sec_gps: ["sg-02974f913553467e6", "sg-f1d1288b", "sg-0009c04d83aa54205", "sg-03020fa65e7b22b40"]
+    # Key pair to use on the instance.
+    target_key: "sharedprovisioning"
+
+- name: Setup Subnetting Variables US Shared A
+  set_fact:
+    target_subnet_id: "subnet-26376e0c"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables US Shared B
+  set_fact:
+    target_subnet_id: "subnet-52474e24"
+  when: (netside == "B")

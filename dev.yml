@@ -1,0 +1,22 @@
+---
+
+- name: Setup Variables for US Dev
+  set_fact:
+    awsarnrole: "arn:aws:iam::345678901234:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-0520ed1df2e3143bf", "sg-0641a65b3c67fab8e", "sg-028cf19246fd17f0f"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    windows_sec_gps: ["sg-0520ed1df2e3143bf", "sg-0641a65b3c67fab8e"]
+    # Key pair to use on the instance.
+    target_key: "devprovisioning"
+
+- name: Setup Subnetting Variables US Dev A
+  set_fact:
+    target_subnet_id: "subnet-2a590000"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables US Dev B
+  set_fact:
+    target_subnet_id: "subnet-63696015"
+  when: (netside == "B")

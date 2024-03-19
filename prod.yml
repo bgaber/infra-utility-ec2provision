@@ -1,0 +1,22 @@
+---
+
+- name: Setup Variables for US Prod
+  set_fact:
+    awsarnrole: "arn:aws:iam::456789012345:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, Cisco AnyConnect, Qualys and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-cb517fbf", "sg-0e5b6063b7df38703", "sg-0bf637d5bc455ced0", "sg-076f036ae8383a1a9"]
+    # Windows list of Standard, Cisco AnyConnect Security Groups and Qualys
+    windows_sec_gps: ["sg-cb517fbf", "sg-0e5b6063b7df38703", "sg-0bf637d5bc455ced0"]
+    # Key pair to use on the instance.
+    target_key: "Provisioning"
+
+- name: Setup Subnetting Variables US Prod A
+  set_fact:
+    target_subnet_id: "subnet-c25801e8"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables US Prod B
+  set_fact:
+    target_subnet_id: "subnet-916861e7"
+  when: (netside == "B")

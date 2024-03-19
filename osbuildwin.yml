@@ -1,0 +1,141 @@
+---
+
+- name: Start Windows Server Instance with a system assigned IP Address
+  ec2_instance:
+    security_groups: "{{ windows_sec_gps }}"
+    image_id: "{{ found_base_ami.images.0.image_id }}"
+    tags:
+      Name: "{{ instance_name }}"
+      Application: "{{ application }}"
+      ComplianceClassification: "{{ compliance_classification }}"
+      DataClassification: "{{ data_classification }}"
+      OS: "{{ osselection }}"
+      Owner: "{{ owner }}"
+    instance_type: "{{ instance_type }}"
+    key_name: "{{ target_key }}"
+    region: "{{ target_region }}"
+    aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ assumed_role.sts_creds.session_token }}"
+    user_data: "{{ lookup('file', 'files/winuserdata.j2') }}"
+    volumes:
+      - device_name: /dev/sda1
+        ebs:
+          delete_on_termination: true
+          volume_type: gp2
+          volume_size: 100
+    vpc_subnet_id: "{{ target_subnet_id }}"
+    wait: yes
+    wait_timeout: 500
+  register: created_instance
+
+- name: New Windows EC2 Instance Metadata
+  debug:
+    var: created_instance
+
+- name: Create and attach 2nd Volume
+  ec2_vol:
+    aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ assumed_role.sts_creds.session_token }}"
+    delete_on_termination: no
+    device_name: /dev/sdf
+    encrypted: yes
+    instance: "{{ created_instance.instance_ids.0 }}"
+    name: "{{ instance_name }} App Volume"
+    region: "{{ target_region }}"
+    volume_size: 50
+    volume_type: gp2
+
+- name: Set default backup tag value if requested
+  set_fact:
+    backup_tag: "DEFAULT_POLICY"
+  when: (isbackup == "yes")
+
+- name: Set Test Backup Tag
+  set_fact:
+    backup_tag: "Test_Instance_Backup"
+  when: (buildenv == "us-test")
+
+- name: Set Prod Talend Backup Tag
+  set_fact:
+    backup_tag: "TLD_USPROD_POLICY_EC2_4WEEKLY TLD_USPROD_POLICY_EC2_7DAILY"
+  when: (buildenv == "us-prod") and (application == "Talend")
+
+- name: Set Prod ForgeRock Backup Tag
+  set_fact:
+    backup_tag: "FRK_USPROD_POLICY_EC2_7DAILY"
+  when: (buildenv == "us-prod") and (application == "Forgerock")
+
+- name: Set Test ForgeRock Backup Tag
+  set_fact:
+    backup_tag: "FRK_USTEST_POLICY_EC2_7DAILY"
+  when: (buildenv == "us-test") and (application == "Forgerock")
+
+- name: Add Backup Tag
+  ec2_tag:
+    region: "{{ target_region }}"
+    aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ assumed_role.sts_creds.session_token }}"
+    resource: "{{ created_instance.instance_ids.0 }}"
+    state: present
+    tags:
+      cpm backup: "{{ backup_tag }}"
+
+- name: Private IP Address
+  debug:
+    msg: "Private IPv4 Address: {{ created_instance.instances.0.private_ip_address }}"
+
+- name: AWS Access Key
+  debug:
+    msg: "Access Key: {{ assumed_role.sts_creds.access_key }}"
+
+- name: AWS Secret Key
+  debug:
+    msg: "Secret Key: {{ assumed_role.sts_creds.secret_key }}"
+
+- name: AWS Security Token
+  debug:
+    msg: "Security Token: {{ assumed_role.sts_creds.session_token }}"
+
+- name: AWS Console Key
+  debug:
+    msg: "AWX -> Administration -> Credential Types -> AWS Console Key: {{ secret_key }}"
+
+- name: Wait 10 minutes before starting to poll for System to be reachable (Windows)
+  wait_for_connection:
+    delay: 600
+  when: (osselection == "win2019") or (osselection == "win2022")
+
+- name: Grab the windows password we need from AWS to write to inventory
+  # if you get an error here it is probably because you didn't select AWS Console Key for the Selected Category option
+  # or the wrong PEM file was used for this AWX Credential
+  ec2_win_password:
+    aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
+    aws_secret_key: "{{ assumed_role.sts_creds.secret_key }}"
+    security_token: "{{ assumed_role.sts_creds.session_token }}"
+    instance_id: "{{ created_instance.instance_ids.0 }}"
+    # the secret_key variable gets it value from the AWX -> Administration -> Credential Types -> AWS Console Key
+    key_file: "{{ secret_key }}"
+    region: "{{ target_region }}"
+    wait: yes
+    wait_timeout: 600
+  register: win_password
+  when: (osselection == "win2019") or (osselection == "win2022")
+
+- name: Add Host to Inventory (Windows)
+  add_host:
+    ansible_connection: winrm
+    ansible_host: "{{ created_instance.instances.0.private_ip_address }}"
+    ansible_user: "{{ target_ans_user }}"
+    ansible_password: "{{ win_password.win_password }}"
+    ansible_python_interpreter: '/usr/bin/env python3'
+    ansible_winrm_read_timeout_sec: 120
+    ansible_winrm_server_cert_validation: ignore
+    groupname: new_launch_windows
+    name: "{{ instance_name }}"
+    region: "{{ target_region }}"
+    application: "{{ application }}"
+  when: (osselection == "win2019") or (osselection == "win2022")
+  

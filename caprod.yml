@@ -1,0 +1,32 @@
+---
+
+- name: Setup Variables for CA Prod
+  set_fact:
+    awsarnrole: "arn:aws:iam::234567890123:role/sre-ec2-role-assumed"
+    target_region: "ca-central-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-1a06b672", "sg-047b211de3df58c62", "sg-03db9d3822cdc6489"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    windows_sec_gps: ["sg-1a06b672", "sg-047b211de3df58c62"]
+    # Key pair to use on the instance.
+    target_key: "CANADA PROD"
+
+- name: Setup Subnetting Variables CA Prod A
+  set_fact:
+    target_subnet_id: "subnet-dba098b2"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables CA Prod B
+  set_fact:
+    target_subnet_id: "subnet-fef0a185"
+  when: (netside == "B")
+
+- name: Setup Subnetting Variables CA Prod A
+  set_fact:
+    target_subnet_id: "subnet-0697caaeaad726861"
+  when: (netside == "2A")
+
+- name: Setup Subnetting Variables CA Prod B
+  set_fact:
+    target_subnet_id: "subnet-07c2b6653290789ae"
+  when: (netside == "2B")

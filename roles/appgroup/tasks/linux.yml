@@ -1,0 +1,169 @@
+---
+
+- name: apply become_user to all appgroup tasks using block
+  block:
+    #- name: Add Application Group ()
+    #  lineinfile:
+    #    dest: /etc/sudoers
+    #    insertafter: EOF
+    #    line: "%       ALL=(ALL)       ALL"
+    #  when: (application == "")
+
+    - name: Add Application Group (AnsibleTower)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%ansibdev       ALL=(ALL)       ALL"
+      when: (application == "AnsibleTower")
+
+    - name: Add Application Group (Bonitasoft)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%bonitadev       ALL=(ALL)       ALL"
+      when: (application == "Bonitasoft")
+
+    - name: Add Application Group (DataEngineering)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%dbirptng       ALL=(ALL)       ALL"
+      when: (application == "DataEngineering")
+
+    - name: Add Application Group (DevOps)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%devops       ALL=(ALL)       ALL"
+      when: (application == "Devops")
+
+    - name: Add Application Group (Edge)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%edgedev       ALL=(ALL)       ALL"
+      when: (application == "Edge")
+
+    - name: Add ForgeRock Commands lines into sudoers
+      lineinfile:
+        path: /etc/sudoers
+        insertafter: '^# Cmnd_Alias DRIVERS = /sbin/modprobe'
+        line: '{{ item }}'
+      with_items:
+        - 'Cmnd_Alias FORGEROCK = /bin/su - fruser, /bin/ls, /bin/jq, /bin/gpg, /bin/mailx, /bin/python3, /bin/multitail, /bin/chmod, /bin/chown, /bin/mkdir, /usr/sbin/useradd, /usr/sbin/adduser, /usr/sbin/groupadd'
+        - "\n## ForgeRock Commands"
+      when: (application == "Forgerock")
+
+    - name: Add Application Group (Forgerock) into sudoers
+      lineinfile:
+        path: /etc/sudoers
+        insertafter: EOF
+        line: '{{ item }}'
+      with_items:
+        - "#%forgrdev       ALL=(ALL)       FORGEROCK"
+        - "\n%forgrdev       ALL=(ALL)       NOPASSWD: ALL"
+      when: (application == "Forgerock")
+
+    #- name: Add Application Group (Forgerock) into sudoers
+    #  lineinfile:
+    #    dest: /etc/sudoers
+    #    insertafter: EOF
+    #    line: "%forgrdev       ALL=(ALL)       FORGEROCK"
+    #  when: (application == "Forgerock")
+
+    - name: Add Application Group (Interceptor)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%interceptordev       ALL=(ALL)       ALL"
+      when: (application == "Interceptor")
+
+    - name: Add Application Group (M&R)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%rimadmin       ALL=(ALL)       ALL"
+      when: (application == "M&R")
+
+    - name: Add Application Group (Moogsoft)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%moogdev       ALL=(ALL)       ALL"
+      when: (application == "Moogsoft")
+
+    - name: Add Application Group (Mule)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%mulesdev       ALL=(ALL)       ALL"
+      when: (application == "Mule")
+
+    - name: Add Application Group (NCM)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%rimadmin       ALL=(ALL)       ALL"
+      when: (application == "NCM")
+
+    - name: Add Application Group (NextGen)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%devops       ALL=(ALL)       ALL"
+      when: (application == "NextGen")
+
+    - name: Add Application Group (Odoo 1)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%devops       ALL=(ALL)       ALL"
+      when: (application == "Odoo")
+
+    - name: Add Application Group (Odoo 2)
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%webkul       ALL=(ALL)       ALL"
+      when: (application == "Odoo")
+
+    - import_tasks: forgerock.yml
+      when: (application == "Forgerock")
+
+    - import_tasks: smarts.yml
+      when: (application == "SMARTS")
+
+    - import_tasks: ansible.yml
+      when: (application == "AnsibleTower") and (osselection == "rhel8")
+
+    # The interim Ciphers and MACs are removed here, because if the permanent Ciphers and Keys are enabled from the start then the build fails at the osbuildlinux.yml - Wait for Sytem to be reachable (Linux) step
+    # Why does the Ansible build fail? I do not know.
+    - name: Remove Ciphers line
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: absent
+        regexp: '^Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes256-cbc'
+
+    - name: Remove MACs line
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        state: absent
+        regexp: '^MACs hmac-sha2-512,hmac-sha2-256,hmac-sha1'
+
+    # Add the permanent Ciphers and Keys
+    - name: Add kexalgorithms line
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        insertafter: '^# Ciphers and keying'
+        line: 'kexalgorithms curve25519-sha256,curve25519-sha256@libssh.org,ecdh-sha2-nistp256,ecdh-sha2-nistp384,ecdh-sha2-nistp521,diffie-hellman-group-exchange-sha256,diffie-hellman-group16-sha512,diffie-hellman-group18-sha512,diffie-hellman-group-exchange-sha1,diffie-hellman-group14-sha256,diffie-hellman-group14-sha1'
+
+    - name: Add Ciphers line
+      lineinfile:
+        path: /etc/ssh/sshd_config
+        insertafter: '^# Ciphers and keying'
+        line: 'Ciphers chacha20-poly1305@openssh.com,aes128-ctr,aes192-ctr,aes256-ctr,aes128-gcm@openssh.com,aes256-gcm@openssh.com'
+
+    - name: Reboot after sshd_config modifications
+      reboot:
+  become: true
+  become_user: root

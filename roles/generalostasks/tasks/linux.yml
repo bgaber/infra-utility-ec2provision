@@ -1,0 +1,126 @@
+---
+
+- name: apply become_user to all generalostasks tasks using block
+  block:
+    # without become_user produces "Could not set property: Interactive authentication required." error
+    - name: Rename Server
+      hostname:
+        name: "{{ instance_name }}"
+        use: systemd
+
+    - name: Make Cloudinit leave the hostname alone
+      lineinfile:
+        create: True
+        dest: /etc/cloud/cloud.cfg.d/99_hostname.cfg
+        line: 'preserve_hostname: true'
+        state: present
+
+    - name: Set Timezone when deploying to CA
+      timezone:
+        name: "Canada/Central"
+      when: region == "ca-central-1"
+
+    # the /tmp/buildfiles directory referenced below was created and populated by the infra-utility-imagefactory repo 
+
+    - name: Copy new Chrony config when needed for CA
+      copy:
+        src: /tmp/buildfiles/ca/chrony.conf
+        dest: /etc/chrony.conf
+        remote_src: yes
+        owner: root
+        group: root
+        mode: 0644
+        backup: yes
+      when: (region == "ca-central-1")
+
+    - name: Restart Chrony if we loaded a new config for CA
+      service:
+        name: chronyd
+        state: restarted
+        enabled: yes
+      when: (region == "ca-central-1")
+
+    - name: Copy nslcd.j2 from EC2 to Ansible Controller
+      fetch:
+        src: /tmp/buildfiles/ca/ldap/nslcd.j2
+        dest: /tmp/
+        flat: yes
+      when: ( region == "ca-central-1" ) and (osselection == "rhel7")
+
+    - name: LDAP - Template of CA nslcd Config file
+      template:
+        src: /tmp/nslcd.j2
+        dest: /etc/nslcd.conf
+      when: ( region == "ca-central-1" ) and (osselection == "rhel7")
+
+    # sssd replaces nslcd for RHEL 8
+    # pam_krb5 is deprecated in RHEL 8.  It is replaced with sssd, which includes the PAM module, pam_sss.  This module can perform the tasks pam_krb5 previously used.
+    # https://access.redhat.com/documentation/en-us/red_hat_enterprise_linux/8/html/configuring_authentication_and_authorization_in_rhel/assembly_migrating-authentication-from-nslcd-to-sssd_restricting-domains-for-pam-services-using-sssd
+    # - name: LDAP - Template of CA sssd Config
+    #   template:
+    #     src: /tmp/buildfiles/ca/ldap/sssd.j2
+    #     dest: /etc/sssd/sssd.conf
+    #     owner: root
+    #     group: root
+    #     mode: 0600 
+    #   when: ( region == "ca-central-1" ) and (osselection == "rhel8")
+
+    - name: Copy sssd.j2 from EC2 to Ansible Controller
+      fetch:
+        src: /tmp/buildfiles/ca/ldap/sssd.j2
+        dest: /tmp/
+        flat: yes
+      when: ( region == "ca-central-1" ) and (osselection == "rhel8")
+
+    - name: LDAP - Template of CA sssd Config file
+      template:
+        src: /tmp/sssd.j2
+        dest: /etc/sssd/sssd.conf
+      when: ( region == "ca-central-1" ) and (osselection == "rhel8")
+
+    - name: LDAP - Copy CA krb5.conf
+      copy:
+        src: /tmp/buildfiles/ca/ldap/{{ item }}
+        dest: /etc/
+        remote_src: yes
+        backup: yes
+      with_items:
+        - krb5.conf
+      when: (region == "ca-central-1")
+
+    # It is not recommended to manually modify the PAM files and /etc/nsswitch.conf file in RHEL8.
+
+    - name: LDAP - Copy CA nsswitch.conf
+      copy:
+        src: /tmp/buildfiles/ca/ldap/{{ item }}
+        dest: /etc/
+        remote_src: yes
+        backup: yes
+      with_items:
+        - nsswitch.conf
+      when: (region == "ca-central-1") and (osselection == "rhel7")
+
+    - name: LDAP - Start Services (Again for CA)
+      service:
+        name: "{{ item }}"
+        state: restarted
+        enabled: yes
+      with_items:
+        - nscd
+        - nslcd
+      when: (region == "ca-central-1") and (osselection == "rhel7")
+
+    - name: Restart sssd service
+      service:
+        name: sssd
+        state: restarted
+      when: ( region == "ca-central-1" ) and (osselection == "rhel8")
+
+    - name: Add CA Linux Admin Group ACA Admin If Needed
+      lineinfile:
+        dest: /etc/sudoers
+        insertafter: EOF
+        line: "%acaadmin       ALL=(ALL)       ALL"
+      when: (region == "ca-central-1")
+  become: true
+  become_user: root

@@ -1,0 +1,28 @@
+---
+
+- name: apply become_user to all networkconfig tasks using block
+  block:
+    - name: Setup US DNS in Linux
+      blockinfile:
+        create: yes
+        insertafter: EOF
+        path: /etc/dhcp/dhclient.conf
+        block: |
+          supersede domain-name-servers 10.251.2.156 10.251.5.163;
+          supersede domain-name "compucom.local";
+      when: (region == "us-east-1")
+
+    - name: Setup CA DNS in Linux
+      blockinfile:
+        create: yes
+        insertafter: EOF
+        path: /etc/dhcp/dhclient.conf
+        block: |
+          supersede domain-name-servers 161.108.208.253, 161.108.90.67, 161.108.208.240;
+          supersede domain-name "compucom.local";
+      when: (region == "ca-central-1")
+
+    - name: Reboot to Cleanup
+      reboot:
+  become: true
+  become_user: root

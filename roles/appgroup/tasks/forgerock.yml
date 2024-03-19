@@ -1,0 +1,93 @@
+- name: Ensure group "frgroup" exists
+  group:
+    name: frgroup
+    state: present
+
+- name: Add the user 'fruser' with a primary group of 'frgroup'
+  user:
+    name: fruser
+    comment: ForgeRock User
+    shell: /bin/bash
+    group: frgroup
+
+# Extra Packages for Enterprise Linux (EPEL) required for jq
+- name: RHEL7 install the epel-release repo if ForgeRock 
+  yum:
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+    state: present
+  when: (osselection == "rhel7")
+
+- name: RHEL8 install the epel-release repo if ForgeRock 
+  yum:
+    disable_gpg_check: true
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
+    state: present
+  when: (osselection == "rhel8")
+
+# repo setup for elastic to install filebeat, metricbeat and heartbeat-elastic
+- name: Import elastic GPG public signing key
+  rpm_key:
+    state: present
+    key: https://packages.elastic.co/GPG-KEY-elasticsearch
+
+- name: Create elastic.repo file with repo content
+  copy:
+    dest: "/etc/yum.repos.d/elastic.repo"
+    content: |
+      [elastic-7.x]
+      name=Elastic repository for 7.x packages
+      baseurl=https://artifacts.elastic.co/packages/7.x/yum
+      gpgcheck=1
+      gpgkey=https://artifacts.elastic.co/GPG-KEY-elasticsearch
+      enabled=1
+      autorefresh=1
+      type=rpm-md
+
+- name: Update ca-certificates
+  yum:
+    name:
+      - ca-certificates
+    state: latest # noqa 403
+  when: (ansible_facts['os_family'] == 'RedHat')
+
+- name: Install ForgeRock 7 Software Package Prerequisites
+  yum:
+    name:
+      - java-11-openjdk
+      - gnupg2
+      - mailx
+      - jq
+      - python3
+      - filebeat
+      - metricbeat
+      - heartbeat-elastic
+      - multitail
+    state: present
+
+# jdk-8u301-linux-x64.rpm is found on the AWX server in the awx_task Docker container
+# SSH access required from AWX server to subnet where the new EC2 Instance is launched
+- name: Copy Oracle JDK 8 if ForgeRock
+  become: true
+  become_user: ec2-user
+  copy:
+    src: files/jdk-8u301-linux-x64.rpm
+    dest: /tmp
+    remote_src: no
+
+- name: RHEL7 install Oracle JDK 8 if ForgeRock 
+  yum:
+    name: /tmp/jdk-8u301-linux-x64.rpm
+    state: present
+  when: (osselection == "rhel7")
+
+- name: RHEL8 install Oracle JDK 8 if ForgeRock 
+  yum:
+    disable_gpg_check: true
+    name: /tmp/jdk-8u301-linux-x64.rpm
+    state: present
+  when: (osselection == "rhel8")
+
+- name: Remove jdk-8u301-linux-x64.rpm since we a finished with it
+  file:
+    path: /tmp/jdk-8u301-linux-x64.rpm
+    state: absent

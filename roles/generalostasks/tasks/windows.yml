@@ -1,0 +1,20 @@
+---
+
+- name: Rename Instance
+  win_hostname:
+    name: "{{ instance_name }}"
+
+- name: Reboot for Name Change
+  win_reboot:
+
+- name: Set timezone to EST
+  win_timezone:
+    timezone: "Eastern Standard Time"
+
+- name: Disable Firewall
+  win_firewall:
+    state: disabled
+    profiles:
+    - Domain
+    - Private
+    - Public

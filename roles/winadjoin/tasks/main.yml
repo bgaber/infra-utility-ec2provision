@@ -1,0 +1,33 @@
+---
+
+- name: Turn on SMBv1 Cause Reasons
+  win_optional_feature:
+    name: "smb1protocol"
+
+- name: Reboot for updates
+  win_reboot:
+
+- name: Windows Admin Username Debug Message
+  debug:
+    #msg: "Windows Admin username is {{ adm_username }}"
+    msg: "Windows Admin username is {{ lookup('aws_ssm', '/ansible/windows/service-account/username', region='us-east-1', on_denied='warn', on_missing='warn') }}"
+
+- name: Join Build to AD
+  win_domain_membership:
+    dns_domain_name: compucom.local
+    #domain_admin_user: "{{ adm_username }}"
+    #domain_admin_password: "{{ adm_password }}"
+    domain_admin_user: "{{ lookup('aws_ssm', '/ansible/windows/service-account/username', region='us-east-1') }}"
+    domain_admin_password: "{{ lookup('aws_ssm', '/ansible/windows/service-account/password', region='us-east-1') }}"
+    domain_ou_path: "OU=AWS Servers,OU=Server Management,OU=Site - Corporate,DC=compucom,DC=local"
+    state: domain
+  register: domain_state
+
+- name: Join Build to AD output
+  debug:
+    var: domain_state
+
+# Play below is commented because it times-out and results in AWX build failure
+#- name: Reboot After Successful AD Join
+#  win_reboot:
+#  when: (domain_state.reboot_required)
