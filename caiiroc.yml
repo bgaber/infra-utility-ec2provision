@@ -1,0 +1,24 @@
+---
+
+- name: Setup Variables for CA IIROC
+  set_fact:
+    awsarnrole: "arn:aws:iam::172507017890:role/sre-ec2-role-assumed"
+    target_region: "ca-central-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    #linux_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0375e51830c444bd5", "sg-0fb5f67b5c952d290"]
+    linux_sec_gps: ["sg-051b00051d1db4420", "sg-0a437f443a779ce10"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    #windows_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0375e51830c444bd5"]
+    windows_sec_gps: ["sg-051b00051d1db4420", "sg-0a437f443a779ce10"]
+    # Key pair to use on the instance.
+    target_key: "CANADA PROD"
+
+- name: Setup Subnetting Variables CA Prod A
+  set_fact:
+    target_subnet_id: "subnet-00bbb475cb772eacd"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables CA Prod B
+  set_fact:
+    target_subnet_id: "subnet-0234acf0cbd140349"
+  when: (netside == "B")

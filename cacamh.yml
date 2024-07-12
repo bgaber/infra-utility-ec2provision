@@ -1,0 +1,24 @@
+---
+
+- name: Setup Variables for CA CAMH
+  set_fact:
+    awsarnrole: "arn:aws:iam::172507017890:role/sre-ec2-role-assumed"
+    target_region: "ca-central-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    #linux_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0375e51830c444bd5", "sg-0fb5f67b5c952d290"]
+    linux_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0f0af8028fc200df4", "sg-086066544ede5839c"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    #windows_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0375e51830c444bd5"]
+    windows_sec_gps: ["sg-0ba9db20bfac0863d", "sg-0f0af8028fc200df4"]
+    # Key pair to use on the instance.
+    target_key: "CANADA PROD"
+
+- name: Setup Subnetting Variables CA Prod A
+  set_fact:
+    target_subnet_id: "subnet-09559b89e5b97dd38"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables CA Prod B
+  set_fact:
+    target_subnet_id: "subnet-0af5f379a3240ab09"
+  when: (netside == "B")

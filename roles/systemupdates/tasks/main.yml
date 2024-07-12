@@ -1,10 +1,18 @@
 ---
 
-- name: Linux Updates
+- name: Redhat OS Family Linux Updates
   yum:
     name: '*'
     state: latest # noqa 403
   when: (ansible_facts['os_family'] == 'RedHat')
+  become: true
+  become_user: root
+
+- name: Debian OS Family Linux Updates
+  ansible.builtin.apt:
+    name: '*'
+    state: latest # noqa 403
+  when: (ansible_facts['os_family'] == 'Debian')
   become: true
   become_user: root
 

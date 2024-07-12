@@ -4,11 +4,11 @@ name: EC2 Provisioning
 
 steps:
 - name: Ansible Syntax Check
-  image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/sre-team/imagebuilder:1.2
+  image: 472510080448.dkr.ecr.us-east-1.amazonaws.com/sre-team/imagebuilder:1.2
   commands:
   - ansible-playbook --syntax-check main.yml
 
 - name: Ansible Lint
-  image: 123456789012.dkr.ecr.us-east-1.amazonaws.com/sre-team/imagebuilder:1.2
+  image: 472510080448.dkr.ecr.us-east-1.amazonaws.com/sre-team/imagebuilder:1.2
   commands:
   - ansible-lint -w 208 main.yml

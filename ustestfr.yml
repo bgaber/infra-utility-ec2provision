@@ -1,0 +1,23 @@
+---
+
+- name: Setup Variables for ForgeRock US Test
+  set_fact:
+    awsarnrole: "arn:aws:iam::300899438431:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-b7f9e7c3", "sg-035ebd42ab8a3acb6", "sg-0d1f62d6e89f9af59"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    windows_sec_gps: ["sg-b7f9e7c3", "sg-035ebd42ab8a3acb6"]
+    # Key pair to use on the instance.
+    target_key: "testprovisioning"
+
+- name: Setup Subnetting Variables ForgeRock US Test A
+  set_fact:
+    target_subnet_id: "subnet-dfb10885"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables ForgeRock US Test B
+  set_fact:
+    target_subnet_id: "subnet-2b34264e"
+  when: (netside == "B")
+  

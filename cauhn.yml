@@ -1,0 +1,23 @@
+---
+
+- name: Setup Variables for CA UHN Customer
+  set_fact:
+    awsarnrole: "arn:aws:iam::172507017890:role/sre-ec2-role-assumed"
+    target_region: "ca-central-1"
+    # Linux list of Standard, SMARTS, Cisco AnyConnect, Qualys and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-0786cec561713366a", "sg-0c50faf910b8a38c4", "sg-062c22f32b01caacf", "sg-060068ee4c840e866"]
+    # Windows list of Standard, SMARTS, Cisco AnyConnect Security Groups and Qualys
+    windows_sec_gps: ["sg-0786cec561713366a","sg-0c50faf910b8a38c4", "sg-062c22f32b01caacf", "sg-060068ee4c840e866"]
+    # Key pair to use on the instance.
+    target_key: "CANADA PROD"
+
+- name: Setup Subnetting Variables UHN A
+  set_fact:
+    target_subnet_id: "subnet-09347547368fcdbcc"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables UHN B
+  set_fact:
+    target_subnet_id: "subnet-0bc2651982e6dfd81"
+  when: (netside == "B")
+  

@@ -1,24 +1,29 @@
 ---
 
-- name: Setup Variables for CentOS 7
-  set_fact:
-    target_ans_user: "centos"
-  when: (osselection == "centos7")
-
-- name: Setup Variables for CentOS 8
-  set_fact:
-    target_ans_user: "centos"
-  when: (osselection == "centos8")
-
-- name: Setup Variables for RHEL 7
+- name: Setup Variables for CentOS 9
   set_fact:
     target_ans_user: "ec2-user"
-  when: (osselection == "rhel7")
+  when: (osselection == "centos9")
+
+# - name: Setup Variables for RHEL 7
+#   set_fact:
+#     target_ans_user: "ec2-user"
+#   when: (osselection == "rhel7")
 
 - name: Setup Variables for RHEL 8
   set_fact:
     target_ans_user: "ec2-user"
   when: (osselection == "rhel8")
+
+- name: Setup Variables for RHEL 9
+  set_fact:
+    target_ans_user: "ec2-user"
+  when: (osselection == "rhel9")
+
+- name: Setup Variables for Ubuntu 24
+  set_fact:
+    target_ans_user: "ubuntu"
+  when: (osselection == "ubuntu24")
 
 - name: Setup Variables for Windows
   set_fact:

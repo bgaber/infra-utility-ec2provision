@@ -1,0 +1,22 @@
+---
+
+- name: Setup Variables for CA Test
+  set_fact:
+    awsarnrole: "arn:aws:iam::172507017890:role/sre-ec2-role-assumed"
+    target_region: "ca-central-1"
+    # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-dd73e6b6", "sg-0196a4e65ab51d5d9", "sg-0312d7b660e1852ab"]
+    # Windows list of Standard and Cisco AnyConnect Security Groups
+    windows_sec_gps: ["sg-dd73e6b6", "sg-0196a4e65ab51d5d9"]
+    # Key pair to use on the instance.
+    target_key: "CANADA PROD"
+
+- name: Setup Subnetting Variables CA Test A
+  set_fact:
+    target_subnet_id: "subnet-74e04a1c"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables CA Test B
+  set_fact:
+    target_subnet_id: "subnet-d47cbbae"
+  when: (netside == "B")

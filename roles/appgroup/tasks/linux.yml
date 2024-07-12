@@ -106,27 +106,6 @@
         line: "%rimadmin       ALL=(ALL)       ALL"
       when: (application == "NCM")
 
-    - name: Add Application Group (NextGen)
-      lineinfile:
-        dest: /etc/sudoers
-        insertafter: EOF
-        line: "%devops       ALL=(ALL)       ALL"
-      when: (application == "NextGen")
-
-    - name: Add Application Group (Odoo 1)
-      lineinfile:
-        dest: /etc/sudoers
-        insertafter: EOF
-        line: "%devops       ALL=(ALL)       ALL"
-      when: (application == "Odoo")
-
-    - name: Add Application Group (Odoo 2)
-      lineinfile:
-        dest: /etc/sudoers
-        insertafter: EOF
-        line: "%webkul       ALL=(ALL)       ALL"
-      when: (application == "Odoo")
-
     - import_tasks: forgerock.yml
       when: (application == "Forgerock")
 
@@ -134,7 +113,7 @@
       when: (application == "SMARTS")
 
     - import_tasks: ansible.yml
-      when: (application == "AnsibleTower") and (osselection == "rhel8")
+      when: (application == "AnsibleTower") and ((osselection == "rhel8") or (osselection == "rhel9") or (osselection == "ubuntu24"))
 
     # The interim Ciphers and MACs are removed here, because if the permanent Ciphers and Keys are enabled from the start then the build fails at the osbuildlinux.yml - Wait for Sytem to be reachable (Linux) step
     # Why does the Ansible build fail? I do not know.

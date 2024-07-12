@@ -2,7 +2,7 @@
 
 - name: Setup Variables for CA Prod
   set_fact:
-    awsarnrole: "arn:aws:iam::234567890123:role/sre-ec2-role-assumed"
+    awsarnrole: "arn:aws:iam::172507017890:role/sre-ec2-role-assumed"
     target_region: "ca-central-1"
     # Linux list of Standard, Cisco AnyConnect and Redhat Capsule Security Groups
     linux_sec_gps: ["sg-1a06b672", "sg-047b211de3df58c62", "sg-03db9d3822cdc6489"]

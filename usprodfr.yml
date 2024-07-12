@@ -1,0 +1,23 @@
+---
+
+- name: Setup Variables for ForgeRock US Prod
+  set_fact:
+    awsarnrole: "arn:aws:iam::122639376858:role/sre-ec2-role-assumed"
+    target_region: "us-east-1"
+    # Linux list of Standard, Cisco AnyConnect, Qualys and Redhat Capsule Security Groups
+    linux_sec_gps: ["sg-fe6c548a", "sg-0b79870e1e884e3a0", "sg-0054ff9a8042be11d", "sg-0fe71f41aa2d99016"]
+    # Windows list of Standard, Cisco AnyConnect Security Groups and Qualys
+    windows_sec_gps: ["sg-fe6c548a", "sg-0b79870e1e884e3a0", "sg-0054ff9a8042be11d"]
+    # Key pair to use on the instance.
+    target_key: "Provisioning"
+
+- name: Setup Subnetting Variables ForgeRock US Prod A
+  set_fact:
+    target_subnet_id: "subnet-a1f61bc5"
+  when: (netside == "A")
+
+- name: Setup Subnetting Variables ForgeRock US Prod B
+  set_fact:
+    target_subnet_id: "subnet-c66df2ea"
+  when: (netside == "B")
+  

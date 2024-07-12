@@ -6,23 +6,38 @@
   connection: local
 
   tasks:
-    - import_tasks: shared.yml
-      when: (buildenv == "shared")
+    - import_tasks: usshared.yml
+      when: (buildenv == "us-shared")
 
-    - import_tasks: dev.yml
-      when: (buildenv == "dev")
+    - import_tasks: usdev.yml
+      when: (buildenv == "us-dev")
 
-    - import_tasks: test.yml
-      when: (buildenv == "test")
+    - import_tasks: ustest.yml
+      when: (buildenv == "us-test")
 
-    - import_tasks: testfr.yml
-      when: (buildenv == "test-fr")
+    - import_tasks: ustestfr.yml
+      when: (buildenv == "us-test-fr")
 
-    - import_tasks: prod.yml
-      when: (buildenv == "prod")
+    - import_tasks: usprod.yml
+      when: (buildenv == "us-prod")
+
+    - import_tasks: usprodfr.yml
+      when: (buildenv == "us-prod-fr")
 
     - import_tasks: caprod.yml
       when: (buildenv == "ca-prod")
+
+    - import_tasks: catest.yml
+      when: (buildenv == "ca-test")
+
+    - import_tasks: caspog.yml
+      when: (buildenv == "ca-spog")
+
+    - import_tasks: caiiroc.yml
+      when: (buildenv == "ca-iiroc")
+
+    - import_tasks: cauhn.yml
+      when: (buildenv == "ca-uhn")
 
     - import_tasks: ossettings.yml
 
@@ -58,7 +73,7 @@
       ec2_ami_info:
         filters:
           name: "cmpc*{{ osselection }}*base*"
-        owners: 123456789012
+        owners: 472510080448
         #owners: self
         region: "{{ target_region }}"
         aws_access_key: "{{ assumed_role.sts_creds.access_key }}"
@@ -67,7 +82,7 @@
       register: found_base_ami
 
     - import_tasks: osbuildlinux.yml
-      when: (osselection == "centos7") or (osselection == "centos8") or (osselection == "rhel7") or (osselection == "rhel8")
+      when: (osselection == "centos9") or (osselection == "rhel8") or (osselection == "rhel9") or (osselection == "ubuntu24")
 
     - import_tasks: osbuildwin.yml
       when: (ipspecified == "no") and ((osselection == "win2019") or (osselection == "win2022"))

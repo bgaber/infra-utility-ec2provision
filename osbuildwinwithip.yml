@@ -24,7 +24,7 @@
       - device_name: /dev/sda1
         ebs:
           delete_on_termination: true
-          volume_type: gp2
+          volume_type: gp3
           volume_size: 100
     vpc_subnet_id: "{{ target_subnet_id }}"
     wait: yes
@@ -47,7 +47,7 @@
     name: "{{ instance_name }} App Volume"
     region: "{{ target_region }}"
     volume_size: 50
-    volume_type: gp2
+    volume_type: gp3
 
 - name: Set default backup tag value if requested
   set_fact:

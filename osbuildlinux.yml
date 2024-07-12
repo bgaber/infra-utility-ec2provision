@@ -10,6 +10,7 @@
     tags:
       Name: "{{ instance_name }}"
       Application: "{{ application }}"
+      Portfolio: "{{ portfolio }}"
       ComplianceClassification: "{{ compliance_classification }}"
       Created: "{{ lookup('pipe','date +%Y-%m-%d') }}"
       Creator: "{{ tower_user_name }}"
@@ -26,7 +27,7 @@
       - device_name: /dev/sda1
         ebs:
           delete_on_termination: true
-          volume_type: gp2
+          volume_type: gp3
           volume_size: 100
     vpc_subnet_id: "{{ target_subnet_id }}"
     wait: yes
@@ -51,6 +52,7 @@
     tags:
       Name: "{{ instance_name }}"
       Application: "{{ application }}"
+      Portfolio: "{{ portfolio }}"
       ComplianceClassification: "{{ compliance_classification }}"
       Created: "{{ lookup('pipe','date +%Y-%m-%d') }}"
       Creator: "{{ tower_user_name }}"
@@ -58,7 +60,7 @@
       OS: "{{ osselection }}"
       Owner: "{{ owner }}"
     volume_size: 50
-    volume_type: gp2
+    volume_type: gp3
 
 - name: Set default backup tag value if requested
   set_fact:
@@ -106,23 +108,42 @@
     tags:
       cpm backup: "{{ backup_tag }}"
 
-- name: Private IP Address
+- name: Print Private IP Address
   debug:
     msg: "Private IPv4 Address: {{ created_instance.instances.0.private_ip_address }}"
 
+- name: Assign IP Address
+  set_fact:
+    ec2_ip_address: "{{ created_instance.instances.0.private_ip_address }}"
+
+- name: Reassign IP Address to NATed IP
+  set_fact:
+    ec2_ip_address: "{{ hostvars[inventory_hostname].ec2_ip_address | regex_replace('\\b(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9]?[0-9])\\b', '10.144.192.\\4') }}"
+  when: (buildenv == "ca-uhn")
+
+- name: Print NAT IP Address
+  debug:
+    msg: "Private NAT IPv4 Address: {{ ec2_ip_address }}"
+  when: (buildenv == "ca-uhn")
+
 - name: Add Host to Inventory (Linux)
   add_host:
-    ansible_host: "{{ created_instance.instances.0.private_ip_address }}"
+    #ansible_host: "{{ created_instance.instances.0.private_ip_address }}"
+    ansible_host: "{{ ec2_ip_address }}"
     ansible_user: "{{ target_ans_user }}"
     groupname: new_launch_linux
     name: "{{ instance_name }}"
     region: "{{ target_region }}"
     application: "{{ application }}"
     #shared_variable:  "{{ assumed_role }}"
-  when: (osselection == "centos7") or (osselection == "centos8") or (osselection == "rhel7") or (osselection == "rhel8")
+  when: (osselection == "centos9") or (osselection == "rhel8") or (osselection == "rhel9") or (osselection == "ubuntu24")
 
-- name: Wait for Sytem to be reachable (Linux)
+#- name: Wait for Sytem to be reachable (Linux)
+- name: Wait 300 seconds for port 22 to become open and contain "OpenSSH"
   wait_for:
-    host: "{{ created_instance.instances.0.private_ip_address }}"
     port: 22
-  when: (osselection == "centos7") or (osselection == "centos8") or (osselection == "rhel7") or (osselection == "rhel8")
+    #host: "{{ created_instance.instances.0.private_ip_address }}"
+    host: "{{ ec2_ip_address }}"
+    search_regex: OpenSSH
+    delay: 60
+  when: (osselection == "centos9") or (osselection == "rhel8") or (osselection == "rhel9") or (osselection == "ubuntu24")

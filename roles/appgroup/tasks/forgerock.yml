@@ -10,12 +10,13 @@
     shell: /bin/bash
     group: frgroup
 
+# Not doing RHEL 7 anymore
 # Extra Packages for Enterprise Linux (EPEL) required for jq
-- name: RHEL7 install the epel-release repo if ForgeRock 
-  yum:
-    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
-    state: present
-  when: (osselection == "rhel7")
+# - name: RHEL7 install the epel-release repo if ForgeRock 
+#   yum:
+#     name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+#     state: present
+#   when: (osselection == "rhel7")
 
 - name: RHEL8 install the epel-release repo if ForgeRock 
   yum:
@@ -23,6 +24,13 @@
     name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-8.noarch.rpm
     state: present
   when: (osselection == "rhel8")
+
+- name: RHEL9 install the epel-release repo if ForgeRock 
+  yum:
+    disable_gpg_check: true
+    name: https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm
+    state: present
+  when: (osselection == "rhel9")
 
 # repo setup for elastic to install filebeat, metricbeat and heartbeat-elastic
 - name: Import elastic GPG public signing key
@@ -43,12 +51,19 @@
       autorefresh=1
       type=rpm-md
 
-- name: Update ca-certificates
+- name: Update RedHat OS Family ca-certificates
   yum:
     name:
       - ca-certificates
     state: latest # noqa 403
   when: (ansible_facts['os_family'] == 'RedHat')
+
+- name: Update Debian OS Family ca-certificates
+  ansible.builtin.apt:
+    name:
+      - ca-certificates
+    state: latest # noqa 403
+  when: (ansible_facts['os_family'] == 'Debian')
 
 - name: Install ForgeRock 7 Software Package Prerequisites
   yum:
@@ -74,18 +89,19 @@
     dest: /tmp
     remote_src: no
 
-- name: RHEL7 install Oracle JDK 8 if ForgeRock 
-  yum:
-    name: /tmp/jdk-8u301-linux-x64.rpm
-    state: present
-  when: (osselection == "rhel7")
+# Not doing RHEL 7 anymore
+# - name: RHEL7 install Oracle JDK 8 if ForgeRock 
+#   yum:
+#     name: /tmp/jdk-8u301-linux-x64.rpm
+#     state: present
+#   when: (osselection == "rhel7")
 
-- name: RHEL8 install Oracle JDK 8 if ForgeRock 
+- name: RHEL8 or RHEL 9 or Ubuntu 24 install Oracle JDK 8 if ForgeRock 
   yum:
     disable_gpg_check: true
     name: /tmp/jdk-8u301-linux-x64.rpm
     state: present
-  when: (osselection == "rhel8")
+  when: (osselection == "centos9") or (osselection == "rhel8") or (osselection == "rhel9") or (osselection == "ubuntu24")
 
 - name: Remove jdk-8u301-linux-x64.rpm since we a finished with it
   file:
