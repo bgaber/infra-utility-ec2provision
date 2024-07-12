@@ -60,8 +60,8 @@ services:
     restart: unless-stopped
     environment:
       - DRONE_BITBUCKET_CLIENT_ID=w7QLNK7Rj54UaSgfMD
-      - DRONE_BITBUCKET_CLIENT_SECRET=CPwGFmtS8AtckBwSxWs4CVtcWhTYPgHN
-      - DRONE_RPC_SECRET=38f6fd4705dbac9bbb6ca116b23f0e35
+      - DRONE_BITBUCKET_CLIENT_SECRET=
+      - DRONE_RPC_SECRET=
       - DRONE_SERVER_HOST=drone.sre.compucom.com
       - DRONE_SERVER_PROTO=https
       - DRONE_USER_CREATE=username:ch230427,admin:true
@@ -79,7 +79,7 @@ services:
     environment:
       - DRONE_CONFIG_FILE=/config.yml
       - DRONE_DEBUG=true
-      - DRONE_SECRET=ec3278d6d9cff082fb109f66984fd76a
+      - DRONE_SECRET=
     ports:
       - target: 3000
         published: 3001
